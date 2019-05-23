@@ -1,26 +1,83 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, {Component} from 'react';
+import Header from './components/Header';
+import TaskList from './components/TaskList';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+// export const TodoContext = React.createContext({});
+
+export default class App extends Component {
+    state = {
+        dataset: {
+            uncompleted: [],
+            completed: []
+        }
+    }
+
+    componentDidMount() {
+        const dataset = (localStorage.getItem('todoListData'))
+            ? JSON.parse(localStorage.getItem('todoListData'))
+            : {
+                uncompleted: [],
+                completed: []
+            };
+
+        this.setState({dataset});
+    }
+
+    addTask = (task) => {
+        this.setState(prev => ({
+            dataset: {
+                ...prev.dataset,
+                uncompleted: this
+                    .state
+                    .dataset
+                    .uncompleted
+                    .concat(task)
+            }
+        }))
+        this.saveStorage();
+    }
+    saveStorage = () => {
+        localStorage.setItem('todoListData', JSON.stringify(this.state.dataset));
+    }
+
+    deleteTask = (task) => {
+        const dataset = this.state.dataset;
+        dataset[task.list].splice(task.index, 1);
+        this.setState({dataset});
+        this.saveStorage();
+    }
+
+    checkTask = (task) => {
+        const dataset = this.state.dataset;
+
+        dataset[task.list].splice(task.index, 1);
+        if ('uncompleted' === task.list) {
+            dataset.completed.push(task.label);
+        } else {
+            dataset.uncompleted.push(task.label);
+        }
+
+        this.setState({dataset});
+        this.saveStorage();
+    }
+
+    render() {
+        return (
+            <div className="App main-container">
+                <Header addTask={this.addTask}/>
+                <div className="wrap-tasks">
+                    <TaskList
+                        tasks={this.state.dataset.uncompleted}
+                        mode={"uncompleted"}
+                        checkTask={this.checkTask}
+                        deleteTask={this.deleteTask}/>
+                    <TaskList
+                        tasks={this.state.dataset.completed}
+                        mode={"completed"}
+                        checkTask={this.checkTask}
+                        deleteTask={this.deleteTask}/>
+                </div>
+            </div>
+        );
+    }
 }
-
-export default App;
